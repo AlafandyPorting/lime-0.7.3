@@ -107,7 +107,7 @@ def getPassword(message) {
 				title: 'Enter password',
 				alwaysOnTop: true,
 				size: [350, 150],
-				resizable: false,
+				resizable: true, // false
 				locationRelativeTo: null,
 				pack: true,
 				modal: true,
