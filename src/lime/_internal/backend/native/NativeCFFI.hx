@@ -106,12 +106,6 @@ class NativeCFFI
 	@:cffi private static function lime_file_dialog_open_files(title:String, filter:String, defaultPath:String):Dynamic;
 
 	@:cffi private static function (title:String, filter:String, defaultPath:String):Dynamic;
-
-	@:cffi private static function lime_file_dialog_open_directory(title:String, filter:String, defaultPath:String):Dynamic;
-	
-	@:cffi private static function lime_file_dialog_open_file(title:String, filter:String, defaultPath:String):Dynamic;
-	
-	@:cffi private static function lime_file_dialog_open_files(title:String, filter:String, defaultPath:String):Dynamic;
 	
 	@:cffi private static function lime_file_dialog_save_file(title:String, filter:String, defaultPath:String):Dynamic;
 	
@@ -441,8 +435,6 @@ class NativeCFFI
 		"lime_file_dialog_open_files", "ssso", false));
 	private static var lime_file_dialog_save_file = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime",
 		"lime_file_dialog_save_file", "ssso", false));
-	private static var lime_file_dialog_open_directory = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime", 
-		"lime_file_dialog_open_directory", "ssso", false));
 	private static var lime_file_dialog_manager_register_ios = new cpp.Callable<cpp.Object->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime", 
 		"lime_file_dialog_manager_register_ios", "oov", false));
 	private static var lime_file_dialog_create_ios = new cpp.Callable<Void->Int>(cpp.Prime._loadPrime("lime", 
@@ -710,7 +702,6 @@ class NativeCFFI
 	private static var lime_deflate_compress = CFFI.load("lime", "lime_deflate_compress", 2);
 	private static var lime_deflate_decompress = CFFI.load("lime", "lime_deflate_decompress", 2);
 	private static var lime_drop_event_manager_register = CFFI.load("lime", "lime_drop_event_manager_register", 2);
-	private static var lime_file_dialog_open_directory = CFFI.load("lime", "lime_file_dialog_open_directory", 3);
 	private static var lime_file_dialog_open_file = CFFI.load("lime", "lime_file_dialog_open_file", 3);
 	private static var lime_file_dialog_open_files = CFFI.load("lime", "lime_file_dialog_open_files", 3);
 	private static var lime_file_dialog_save_file = CFFI.load("lime", "lime_file_dialog_save_file", 3);
