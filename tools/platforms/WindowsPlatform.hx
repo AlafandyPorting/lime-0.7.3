@@ -148,12 +148,10 @@ class WindowsPlatform extends PlatformTarget
 		else if (project.targetFlags.exists("hl"))
 		{
 			targetType = "hl";
-			is64 = !project.flags.exists("32");
 		}
 		else if (project.targetFlags.exists("cppia"))
 		{
 			targetType = "cppia";
-			is64 = true;
 		}
 		else if (project.targetFlags.exists("nodejs"))
 		{
@@ -175,6 +173,9 @@ class WindowsPlatform extends PlatformTarget
 		{
 			targetType = "cpp";
 		}
+
+		is64 = false;
+		isArm = false;
 
 		for (architecture in project.architectures)
 		{
@@ -208,6 +209,16 @@ class WindowsPlatform extends PlatformTarget
 			{
 				isArm = true;
 			}
+		}
+
+		if (project.targetFlags.exists("32") || project.flags.exists("32") || project.defines.exists("32") || project.defines.exists("HXCPP_M32"))
+		{
+			is64 = false;
+		}
+		
+		if (project.targetFlags.exists("64") || project.flags.exists("64") || project.defines.exists("64") || project.defines.exists("HXCPP_M64"))
+		{
+			is64 = true;
 		}
 
 		targetDirectory = Path.combine(project.app.path, project.config.getString("windows.output-directory", targetType == "cpp" ? "windows" : targetType));
@@ -245,16 +256,13 @@ class WindowsPlatform extends PlatformTarget
 			{
 				System.runCommand("", "haxe", [hxml]);
 
-				// start by finding visual studio
 				var programFilesX86 = Sys.getEnv("ProgramFiles(x86)");
 				var vswhereCommand = programFilesX86 + "\\Microsoft Visual Studio\\Installer\\vswhere.exe";
 				var vswhereOutput = System.runProcess("", vswhereCommand, ["-latest", "-products", "*", "-requires", "Microsoft.Component.MSBuild", "-property", "installationPath"]);
 				var visualStudioPath = StringTools.trim(vswhereOutput);
-				// then, find MSBuild inside visual studio
 				var msBuildPath = visualStudioPath + "\\MSBuild\\Current\\Bin\\MSBuild.exe";
 				if (!FileSystem.exists(msBuildPath))
 				{
-					// fallback for VS 2017, which didn't use Current
 					msBuildPath = visualStudioPath + "\\MSBuild\\15.0\\Bin\\MSBuild.exe";
 					if (!FileSystem.exists(msBuildPath))
 					{
@@ -315,11 +323,9 @@ class WindowsPlatform extends PlatformTarget
 
 				for (ndll in project.ndlls)
 				{
-					// TODO: Support single binary for HashLink
 					if (targetType == "hl")
 					{
-						ProjectHelper.copyLibrary(project, ndll, "Windows" + (isArm ? "Arm" : "") + (is64 ? "64" : ""), "", ".hdll", applicationDirectory, project.debug,
-							targetSuffix);
+						ProjectHelper.copyLibrary(project, ndll, "Windows" + (isArm ? "Arm" : "") + (is64 ? "64" : ""), "", ".hdll", applicationDirectory, project.debug, targetSuffix);
 					}
 					else
 					{
@@ -329,8 +335,6 @@ class WindowsPlatform extends PlatformTarget
 					}
 				}
 			}
-
-			// IconHelper.createIcon (project.icons, 32, 32, Path.combine (applicationDirectory, "icon.png"));
 
 			if (targetType == "neko")
 			{
@@ -370,7 +374,7 @@ class WindowsPlatform extends PlatformTarget
 
 				if (noOutput) return;
 
-				System.copyFile(Path.combine(Haxelib.getPath(new Haxelib("hxcpp")), "bin/Windows" + (isArm ? "Arm" : "") + "64/Cppia.exe"), executablePath);
+				System.copyFile(Path.combine(Haxelib.getPath(new Haxelib("hxcpp")), "bin/Windows" + (isArm ? "Arm" : "") + (is64 ? "64" : "") + "/Cppia.exe"), executablePath);
 				System.copyFile(targetDirectory + "/obj/ApplicationMain.cppia", Path.combine(applicationDirectory, "script.cppia"));
 
 				var iconPath = Path.combine(applicationDirectory, "icon.ico");
@@ -386,9 +390,6 @@ class WindowsPlatform extends PlatformTarget
 				System.runCommand("", "haxe", [hxml]);
 
 				if (noOutput) return;
-
-				// NekoHelper.createExecutable (project.templatePaths, "windows" + (is64 ? "64" : ""), targetDirectory + "/obj/ApplicationMain.n", executablePath);
-				// NekoHelper.copyLibraries (project.templatePaths, "windows" + (is64 ? "64" : ""), applicationDirectory);
 			}
 			else if (targetType == "cs")
 			{
@@ -400,14 +401,13 @@ class WindowsPlatform extends PlatformTarget
 				var txtPath = targetDirectory + "/obj/hxcs_build.txt";
 				CSHelper.addSourceFiles(txtPath, CSHelper.ndllSourceFiles);
 				CSHelper.addGUID(txtPath, GUID.uuid());
-				CSHelper.compile(project, targetDirectory + "/obj", applicationDirectory + project.app.file, "x86", "desktop");
+				CSHelper.compile(project, targetDirectory + "/obj", applicationDirectory + project.app.file, is64 ? "x64" : "x86", "desktop");
 			}
 			else if (targetType == "java")
 			{
 				var libPath = Path.combine(Haxelib.getPath(new Haxelib("lime")), "templates/java/lib/");
 
 				System.runCommand("", "haxe", [hxml, "-java-lib", libPath + "disruptor.jar", "-java-lib", libPath + "lwjgl.jar"]);
-				// System.runCommand ("", "haxe", [ hxml ]);
 
 				if (noOutput) return;
 
@@ -491,15 +491,6 @@ class WindowsPlatform extends PlatformTarget
 
 					System.copyFile(targetDirectory + "/obj/Main" + (project.debug ? "-debug" : "") + ".exe", executablePath);
 				}
-
-				// TODO createWinrtIcons
-				// var iconPath = Path.combine(applicationDirectory, "icon.ico");
-
-				// if (IconHelper.createWindowsIcon(icons, iconPath) && System.hostPlatform == WINDOWS)
-				// {
-				//	var templates = [Haxelib.getPath(new Haxelib(#if lime "lime" #else "hxp" #end)) + "/templates"].concat(project.templatePaths);
-				//	System.runCommand("", System.findTemplate(templates, "bin/ReplaceVistaIcon.exe"), [executablePath, iconPath, "1"], true, true);
-				// }
 			}
 			else
 			{
@@ -679,18 +670,13 @@ class WindowsPlatform extends PlatformTarget
 	{
 		if (targetType != "winjs")
 		{
-			// if (project.environment.exists ("VS110COMNTOOLS") && project.environment.exists ("VS100COMNTOOLS")) {
-
-			// project.environment.set ("HXCPP_MSVC", project.environment.get ("VS100COMNTOOLS"));
-			// Sys.putEnv ("HXCPP_MSVC", project.environment.get ("VS100COMNTOOLS"));
-
-			// }
-
 			var commands = [];
+			var force32 = project.targetFlags.exists("32") || project.flags.exists("32") || project.defines.exists("32") || project.defines.exists("96");
+			var force64 = project.targetFlags.exists("64") || project.flags.exists("64") || project.defines.exists("64");
+
 			if (targetType == "hl")
 			{
-				// default to 64 bit, just like upstream Hashlink releases
-				if (!targetFlags.exists("32") && (System.hostArchitecture == X64 || targetFlags.exists("64")))
+				if (force64 || (!force32 && System.hostArchitecture == X64))
 				{
 					commands.push(["-Dwindows", "-DHXCPP_M64", "-Dhashlink"]);
 				}
@@ -701,8 +687,7 @@ class WindowsPlatform extends PlatformTarget
 			}
 			else
 			{
-				if (((!targetFlags.exists("armv7") && System.hostArchitecture == ARM64) || (targetFlags.exists("arm64")))
-					&& (command != "rebuild" || targetType == "cpp" || targetType == "winrt"))
+				if (force64 || (!force32 && System.hostArchitecture == ARM64 && (command != "rebuild" || targetType == "cpp" || targetType == "winrt")))
 				{
 					if (targetType == "winrt")
 					{
@@ -713,40 +698,32 @@ class WindowsPlatform extends PlatformTarget
 						commands.push(["-Dwindows", "-DHXCPP_ARM64"]);
 					}
 				}
-
-				if (((!targetFlags.exists("arm64") && System.hostArchitecture == ARMV7) || (targetFlags.exists("armv7")))
-					&& (command != "rebuild" || (targetType != "cpp" && targetType != "winrt")))
+				else if (force32 || project.flags.exists("armv7") || System.hostArchitecture == X86 || (targetType != "cpp" && targetType != "winrt"))
 				{
 					if (targetType == "winrt")
 					{
-						commands.push(["-Dwinrt", "-DHXCPP_ARMV7"]);
+						if (isArm)
+						{
+							commands.push(["-Dwinrt", "-DHXCPP_ARMV7"]);
+						}
+						else
+						{
+							commands.push(["-Dwinrt", "-DHXCPP_M32"]);
+						}
 					}
 					else
 					{
-						commands.push(["-Dwindows", "-DHXCPP_ARMV7"]);
+						if (isArm)
+						{
+							commands.push(["-Dwindows", "-DHXCPP_ARMV7"]);
+						}
+						else
+						{
+							commands.push(["-Dwindows", "-DHXCPP_M32"]);
+						}
 					}
 				}
-
-				if (!targetFlags.exists("64")
-					&& (command == "rebuild" || System.hostArchitecture == X86 || (targetType != "cpp" && targetType != "winrt")))
-				{
-					if (targetType == "winrt")
-					{
-						commands.push(["-Dwinrt", "-DHXCPP_M32"]);
-					}
-					else
-					{
-						commands.push(["-Dwindows", "-DHXCPP_M32"]);
-					}
-				}
-
-				// TODO: Compiling with -Dfulldebug overwrites the same "-debug.pdb"
-				// as previous Windows builds. For now, force -64 to be done last
-				// so that it can be debugged in a default "rebuild"
-
-				if (!targetFlags.exists("32")
-					&& System.hostArchitecture == X64
-					&& (command != "rebuild" || targetType == "cpp" || targetType == "winrt"))
+				else
 				{
 					if (targetType == "winrt")
 					{
@@ -783,68 +760,11 @@ class WindowsPlatform extends PlatformTarget
 		}
 		else if (targetType == "cppia")
 		{
-			// arguments = arguments.concat(["-livereload"]);
-			arguments = ["script.cppia"]; // .concat(arguments);
+			arguments = ["script.cppia"];
 			System.runCommand(applicationDirectory, Path.withoutDirectory(executablePath), arguments);
 		}
 		else if (targetType == "winjs")
 		{
-			/*
-
-				The 'test' target is problematic for UWP applications.  UWP applications are bundled in appx packages and
-				require app certs to properly install.
-
-				There are two options to trigger an appx install from the command line.
-
-				A. Use the WinAppDeployCmd.exe utility to deploy to local and remote devices
-
-				B. Execute the Add-AppDevPackage.ps1 powershell script that is an
-					artifact of the UWP msbuild
-
-				A: WinAppDeployCmd.exe
-				https://docs.microsoft.com/en-us/windows/uwp/packaging/install-universal-windows-apps-with-the-winappdeploycmd-tool
-				https://msdn.microsoft.com/en-us/windows/desktop/mt627714
-				Windows 10 SDK: https://developer.microsoft.com/windows/downloads/windows-10-sdk
-
-				I've never actually got this to work, but I feel like I was close.  The WinAppDeployCmd.exe is a part of the
-				Windows 10 SDK and not a part of the Visual Studio 2017 community edition.  It will appear magically if you
-				check enough boxes when installing various project templates for Visual Studio.  It appeared for me, and I
-				have no clue how it got there.
-
-				A developer must take a few steps in order for this command to work.
-				1. Install Visual Studio 2017 Community Edition
-				2. Install the Windows 10 SDK
-				3. Modify Windows 10 Settings to enable side loading and device discovery
-				3. Enabling device discovery generates a pin number that is displayed to the user
-				4. Open the "Developer Command Promp for VS 2017" from the Start menu
-				5. run:
-					> WinAppDeployCmd devices
-				6. Make sure your device shows up in the list (if it does not appear try step 3 again, toggling things on/off)
-				7. run: (replase file, ip and pin with your values)
-					> WinAppDeployCmd install -file "uwp-project_1.0.0.0_AnyCPU.appx" -ip 192.168.27.167 -pin 326185
-
-				B: Add-AppDevPackage.ps1 + PowerShell_Set_Unrestricted.reg
-				The UWP build generates a powershell script by default. This script is usually executed by the user
-				by right clicking the file and choosing "run with powershell". Executing this script directly from the cmd
-				prompt results in a security error: "Add-AppDevPackage.ps1 cannot be loaded because running scripts is
-				disabled on this system."
-
-				We must edit the registry if we want to run this script directly from a shell.
-				See lime/templates/windows/template/PowerShell_Set_Unrestricted.reg
-
-				1. run:
-					> regedit /s PowerShell_Set_Unrestricted.reg
-				2. run:
-					 			> powershell "& ""./Add-AppDevPackage.ps1"""
-
-					 		note: the nonsensical double quotes are required.
-
-			 */
-
-			// Using option B because obtaining the device pin programatically does not seem possible.
-			// System.runCommand ("", "regedit", [ '/s', '"' + targetDirectory + '/bin/PowerShell_Set_Unrestricted.reg"' ]);
-			// var test = '"& ""' + targetDirectory + '/bin/PowerShell_Set_Unrestricted.reg"""';
-			// Sys.command ('powershell & ""' + targetDirectory + '/bin/source/AppPackages/' + project.app.file + '_1.0.0.0_AnyCPU_Test/Add-AppDevPackage.ps1""');
 			var version = project.meta.version + "." + project.meta.buildNumber;
 			System.openFile(targetDirectory
 				+ "/source/AppPackages/"
@@ -856,10 +776,6 @@ class WindowsPlatform extends PlatformTarget
 				+ "_"
 				+ version
 				+ "_AnyCPU.appx");
-
-			// source/AppPackages/uwp-project_1.0.0.0_AnyCPU_Test/Add-AppDevPackage.ps1
-
-			// HTML5Helper.launch (project, targetDirectory + "/bin");
 		}
 		else if (targetType == "java")
 		{
@@ -885,8 +801,6 @@ class WindowsPlatform extends PlatformTarget
 			updateUWP();
 			return;
 		}
-
-		// project = project.clone ();
 
 		if (project.targetFlags.exists("xml"))
 		{
@@ -941,8 +855,6 @@ class WindowsPlatform extends PlatformTarget
 		System.mkdir(targetDirectory + "/haxe");
 		System.mkdir(applicationDirectory);
 
-		// SWFHelper.generateSWFClasses (project, targetDirectory + "/haxe");
-
 		ProjectHelper.recursiveSmartCopyTemplate(project, "haxe", targetDirectory + "/haxe", context);
 		ProjectHelper.recursiveSmartCopyTemplate(project, targetType + "/hxml", targetDirectory + "/haxe", context);
 
@@ -958,13 +870,6 @@ class WindowsPlatform extends PlatformTarget
 		{
 			ProjectHelper.recursiveSmartCopyTemplate(project, "cpp/static", targetDirectory + "/obj", context);
 		}
-
-		/*if (IconHelper.createIcon (project.icons, 32, 32, Path.combine (applicationDirectory, "icon.png"))) {
-
-			context.HAS_ICON = true;
-			context.WIN_ICON = "icon.png";
-
-		}*/
 
 		for (asset in project.assets)
 		{
@@ -1004,15 +909,13 @@ class WindowsPlatform extends PlatformTarget
 			}
 		}
 
-		var fontPath;
-
 		for (asset in project.assets)
 		{
 			if (asset.type == AssetType.FONT)
 			{
 				if (useWebfonts)
 				{
-					fontPath = Path.combine(webfontDirectory, Path.withoutDirectory(asset.targetPath));
+					var fontPath = Path.combine(webfontDirectory, Path.withoutDirectory(asset.targetPath));
 
 					if (!FileSystem.exists(fontPath))
 					{
@@ -1026,10 +929,6 @@ class WindowsPlatform extends PlatformTarget
 
 					asset.sourcePath = fontPath;
 					asset.targetPath = Path.withoutExtension(asset.targetPath);
-				}
-				else
-				{
-					// project.haxeflags.push (HTML5Helper.generateFontData (project, asset));
 				}
 			}
 		}
@@ -1056,14 +955,6 @@ class WindowsPlatform extends PlatformTarget
 			}
 		}
 
-		// for (library in libraryNames.keys ()) {
-		//
-		// project.haxeflags.push ("-resource " + targetDirectory + "/obj/manifest/" + library + ".json@__ASSET_MANIFEST__" + library);
-		//
-		// }
-
-		// project.haxeflags.push ("-resource " + targetDirectory + "/obj/manifest/default.json@__ASSET_MANIFEST__default");
-
 		var context = generateContext();
 		context.OUTPUT_DIR = targetDirectory;
 
@@ -1075,12 +966,6 @@ class WindowsPlatform extends PlatformTarget
 		{
 			icons = [new Icon(System.findTemplate(project.templatePaths, "default/icon.svg"))];
 		}
-
-		// if (IconHelper.createWindowsIcon (icons, Path.combine (destination, "favicon.ico"))) {
-		//
-		// context.favicons.push ({ rel: "icon", type: "image/x-icon", href: "./favicon.ico" });
-		//
-		// }
 
 		if (IconHelper.createIcon(icons, 192, 192, Path.combine(destination, "favicon.png")))
 		{
@@ -1199,7 +1084,6 @@ class WindowsPlatform extends PlatformTarget
 		System.watch(command, dirs);
 	}
 
-	//	@ignore public override function install ():Void {}
 	override public function install():Void
 	{
 		super.install();
@@ -1231,7 +1115,6 @@ class WindowsPlatform extends PlatformTarget
 
 	@ignore public override function trace():Void {}
 
-	// @ignore public override function uninstall ():Void {}
 	override public function uninstall():Void
 	{
 		super.uninstall();
@@ -1251,7 +1134,6 @@ class WindowsPlatform extends PlatformTarget
 			}
 			process.close();
 		}
-		// TODO 		if (targetType == "winrt" && project.targetFlags.exists("appx"))
 	}
 
 	public function winrtRun(arguments:Array<String>):Void
@@ -1268,10 +1150,8 @@ class WindowsPlatform extends PlatformTarget
 			var appxId = "App";
 			var appxAUMID:String = null;
 			var appxInfoFile = haxeDir + "/appxinfo.txt";
-			var kitsRoot10 = "C:\\Program Files (x86)\\Windows Kits\\10\\"; // %WindowsSdkDir%
+			var kitsRoot10 = "C:\\Program Files (x86)\\Windows Kits\\10\\";
 
-			// get PackageFamilyappxName and set appxAUMID
-			//	write app info in a file
 			var cmd = 'Get-AppxPackage ' + appxName + ' | Out-File ' + appxInfoFile + ' -Encoding ASCII';
 			Log.info("powershell " + cmd);
 			var process3 = new sys.io.Process('powershell', [cmd]);
@@ -1281,7 +1161,7 @@ class WindowsPlatform extends PlatformTarget
 				Log.error("Cannot get PackageFamilyName. " + message);
 			}
 			process3.close();
-			//	parse file
+			
 			if (sys.FileSystem.exists(appxInfoFile))
 			{
 				var fin = sys.io.File.read(appxInfoFile, false);
@@ -1320,7 +1200,7 @@ class WindowsPlatform extends PlatformTarget
 	{
 		if (project.targetFlags.exists("appx"))
 		{
-			var kitsRoot10 = "C:\\Program Files (x86)\\Windows Kits\\10\\"; // %WindowsSdkDir%
+			var kitsRoot10 = "C:\\Program Files (x86)\\Windows Kits\\10\\";
 			var haxeDir = targetDirectory + "/haxe";
 
 			var binDir:String = kitsRoot10 + "\\bin";
@@ -1361,13 +1241,11 @@ class WindowsPlatform extends PlatformTarget
 			var binPath = Path.combine(FileSystem.fullPath(targetDirectory), "bin");
 
 			pfxPath = Path.combine(outputDirectory, pfxPath);
-			// prepare file to make pri
 			try
 			{
 				var from = outputDirectory;
 				var buf = new StringBuf();
 
-				// todo
 				var outputFiles = FileSystem.readDirectory(binPath);
 
 				for (filename in outputFiles)
@@ -1404,7 +1282,6 @@ class WindowsPlatform extends PlatformTarget
 			Log.info(makepriPath + " " + makepriParams);
 			var process = new sys.io.Process(makepriPath, makepriParams);
 
-			// needs to wait make pri
 			var retry:Int = 10;
 			while (retry > 0 && !sys.FileSystem.exists(applicationDirectory + "/" + "resources.pri"))
 			{
@@ -1429,45 +1306,14 @@ class WindowsPlatform extends PlatformTarget
 			{
 				if (sys.FileSystem.exists(appxDir + "scripts/" + pfxFileName))
 				{
-					// apply certificate
 					Log.info("Pfx cert found: path: " + appxDir + "scripts/" + pfxFileName + ", pwd:" + certificatePwd);
 				}
 				else
 				{
-					// create certificate
 					Log.warn("Warn: certificate " + pfxPath + " not found, run the following command to create a new one:");
-					// copyTemplateDir( "winrt/scripts", applicationDirectory+"/.." );
-
-					// New certificate, calls powershell script on elevated mode
-					//					var cmd = "Start-Process powershell \"-ExecutionPolicy Bypass -Command `\"cd `\""+sys.FileSystem.absolutePath(applicationDirectory)+"/.."+"`\"; & `\".\\newcertificate.ps1`\"`\"\" -Verb RunAs";
-					//					var cmd = "Start-Process powershell \"-Command `\"cd `\""+sys.FileSystem.absolutePath(applicationDirectory)+"/.."+"`\"; & `\".\\newcertificate.ps1`\"`\"\" -Verb RunAs";
-
-					// var cmd = "\"cd "+sys.FileSystem.absolutePath(applicationDirectory)+"/../scripts;Start-Process powershell -verb runas -ArgumentList \'-file .\\newcertificate.ps1\'\"";
-
 					var cmd = "-Command \"Start-Process powershell \\\"-ExecutionPolicy Bypass -NoProfile -NoExit -Command `\\\"cd \\`\\\"E:/openfl/BunnyMark/Export/winrt/bin/../scripts\\`\\\"; & \\`\\\".\\newcertificate.ps1\\`\\\"`\\\"\\\" -Verb RunAs\"";
 					Log.info("powershell " + cmd);
-
-					#if 0
-					var process3 = new sys.io.Process("powershell", [cmd]);
-					if (process3.exitCode() != 0)
-					{
-						var message = process3.stderr.readAll().toString();
-						Log.error("Error newcertificate. " + message);
-					}
-					process3.close();
-
-					// check pfx
-					retry = 10;
-					while (retry > 0 && !sys.FileSystem.exists(appxDir + "scripts/" + pfxFileName))
-					{
-						Log.info("waiting " + appxDir + "scripts/" + pfxFileName);
-						Sys.sleep(6);
-						retry--;
-					}
-					if (retry <= 0) Log.error("Error creating certificate");
-					#else
 					return;
-					#end
 				}
 
 				if (appxDir + "scripts/" + pfxFileName != pfxPath)
