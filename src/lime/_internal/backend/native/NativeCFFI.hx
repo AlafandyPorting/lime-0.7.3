@@ -107,6 +107,28 @@ class NativeCFFI
 
 	@:cffi private static function lime_file_dialog_save_file(title:String, filter:String, defaultPath:String):Dynamic;
 
+	@:cffi private static function lime_file_dialog_open_directory(title:String, filter:String, defaultPath:String):Dynamic;
+	
+	@:cffi private static function lime_file_dialog_open_file(title:String, filter:String, defaultPath:String):Dynamic;
+	
+	@:cffi private static function lime_file_dialog_open_files(title:String, filter:String, defaultPath:String):Dynamic;
+	
+	@:cffi private static function lime_file_dialog_save_file(title:String, filter:String, defaultPath:String):Dynamic;
+	
+	@:cffi private static function lime_file_dialog_manager_register_ios(callback:Dynamic, eventObject:Dynamic):Void;
+	
+	@:cffi private static function lime_file_dialog_create_ios():Int;
+	
+	@:cffi private static function lime_file_dialog_open_ios(id:Int):Void;
+	
+	@:cffi private static function lime_file_dialog_browse_select_ios(id:Int):Void;
+	
+	@:cffi private static function lime_file_dialog_browse_select_multiple_ios(id:Int):Void;
+	
+	@:cffi private static function lime_file_dialog_save_ios(id:Int, path:String):Void;
+	
+	@:cffi private static function lime_file_dialog_browse_save_ios(id:Int, path:String):Void;
+
 	@:cffi private static function lime_file_watcher_create(callback:Dynamic):CFFIPointer;
 
 	@:cffi private static function lime_file_watcher_add_directory(handle:CFFIPointer, path:Dynamic, recursive:Bool):Dynamic;
@@ -419,6 +441,28 @@ class NativeCFFI
 		"lime_file_dialog_open_files", "ssso", false));
 	private static var lime_file_dialog_save_file = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime",
 		"lime_file_dialog_save_file", "ssso", false));
+	private static var lime_file_dialog_open_directory = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_open_directory", "ssso", false));
+	private static var lime_file_dialog_open_file = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_open_file", "ssso", false));
+	private static var lime_file_dialog_open_files = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_open_files", "ssso", false));
+	private static var lime_file_dialog_save_file = new cpp.Callable<String->String->String->cpp.Object>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_save_file", "ssso", false));
+	private static var lime_file_dialog_manager_register_ios = new cpp.Callable<cpp.Object->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_manager_register_ios", "oov", false));
+	private static var lime_file_dialog_create_ios = new cpp.Callable<Void->Int>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_create_ios", "i", false));
+	private static var lime_file_dialog_open_ios = new cpp.Callable<Int->cpp.Void>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_open_ios", "iv", false));
+	private static var lime_file_dialog_browse_select_ios = new cpp.Callable<Int->cpp.Void>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_browse_select_ios", "iv", false));
+	private static var lime_file_dialog_browse_select_multiple_ios = new cpp.Callable<Int->cpp.Void>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_browse_select_multiple_ios", "iv", false));
+	private static var lime_file_dialog_save_ios = new cpp.Callable<Int->String->cpp.Void>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_save_ios", "isv", false));
+	private static var lime_file_dialog_browse_save_ios = new cpp.Callable<Int->String->cpp.Void>(cpp.Prime._loadPrime("lime", 
+		"lime_file_dialog_browse_save_ios", "isv", false));
 	private static var lime_file_watcher_create = new cpp.Callable<cpp.Object->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_file_watcher_create", "oo",
 		false));
 	private static var lime_file_watcher_add_directory = new cpp.Callable<cpp.Object->cpp.Object->Bool->cpp.Object>(cpp.Prime._loadPrime("lime",
@@ -676,6 +720,17 @@ class NativeCFFI
 	private static var lime_file_dialog_open_file = CFFI.load("lime", "lime_file_dialog_open_file", 3);
 	private static var lime_file_dialog_open_files = CFFI.load("lime", "lime_file_dialog_open_files", 3);
 	private static var lime_file_dialog_save_file = CFFI.load("lime", "lime_file_dialog_save_file", 3);
+	private static var lime_file_dialog_open_directory = CFFI.load("lime", "lime_file_dialog_open_directory", 3);
+	private static var lime_file_dialog_open_file = CFFI.load("lime", "lime_file_dialog_open_file", 3);
+	private static var lime_file_dialog_open_files = CFFI.load("lime", "lime_file_dialog_open_files", 3);
+	private static var lime_file_dialog_save_file = CFFI.load("lime", "lime_file_dialog_save_file", 3);
+	private static var lime_file_dialog_manager_register_ios = CFFI.load("lime", "lime_file_dialog_manager_register_ios", 2);
+	private static var lime_file_dialog_create_ios = CFFI.load("lime", "lime_file_dialog_create_ios", 0);
+	private static var lime_file_dialog_open_ios = CFFI.load("lime", "lime_file_dialog_open_ios", 1);
+	private static var lime_file_dialog_browse_select_ios = CFFI.load("lime", "lime_file_dialog_browse_select_ios", 1);
+	private static var lime_file_dialog_browse_select_multiple_ios:Int->Void = CFFI.load("lime", "lime_file_dialog_browse_select_multiple_ios", 1);
+	private static var lime_file_dialog_save_ios:Int->String->Void = CFFI.load("lime", "lime_file_dialog_save_ios", 2);
+	private static var lime_file_dialog_browse_save_ios:Int->String->Void = CFFI.load("lime", "lime_file_dialog_browse_save_ios", 2);
 	private static var lime_file_watcher_create = CFFI.load("lime", "lime_file_watcher_create", 1);
 	private static var lime_file_watcher_add_directory = CFFI.load("lime", "lime_file_watcher_add_directory", 3);
 	private static var lime_file_watcher_remove_directory = CFFI.load("lime", "lime_file_watcher_remove_directory", 2);
@@ -925,6 +980,18 @@ class NativeCFFI
 	{
 		return null;
 	}
+
+	@:hlNative("lime", "hl_file_dialog_open_directory") private static function lime_file_dialog_open_directory(title:String, filter:String, defaultPath:String):hl.Bytes { return null; }
+	@:hlNative("lime", "hl_file_dialog_open_file") private static function lime_file_dialog_open_file(title:String, filter:String, defaultPath:String):hl.Bytes { return null; }
+	@:hlNative("lime", "hl_file_dialog_open_files") private static function lime_file_dialog_open_files(title:String, filter:String, defaultPath:String):hl.NativeArray<hl.Bytes> { return null; }
+	@:hlNative("lime", "hl_file_dialog_save_file") private static function lime_file_dialog_save_file(title:String, filter:String, defaultPath:String):hl.Bytes { return null; }
+	@:hlNative("lime", "hl_file_dialog_manager_register_ios") private static function lime_file_dialog_manager_register_ios(callback:Dynamic, eventObject:Dynamic):Void {}
+	@:hlNative("lime", "hl_file_dialog_create_ios") private static function lime_file_dialog_create_ios():Int { return 0; }
+	@:hlNative("lime", "hl_file_dialog_open_ios") private static function lime_file_dialog_open_ios(id:Int):Void {}
+	@:hlNative("lime", "hl_file_dialog_browse_select_ios") private static function lime_file_dialog_browse_select_ios(id:Int):Void {}
+	@:hlNative("lime", "hl_file_dialog_browse_select_multiple_ios") private static function lime_file_dialog_browse_select_multiple_ios(id:Int):Void {}
+	@:hlNative("lime", "hl_file_dialog_save_ios") private static function lime_file_dialog_save_ios(id:Int, path:String):Void {}
+	@:hlNative("lime", "hl_file_dialog_browse_save_ios") private static function lime_file_dialog_browse_save_ios(id:Int, path:String):Void {}
 
 	@:hlNative("lime", "hl_file_watcher_create") private static function lime_file_watcher_create(callback:Dynamic):CFFIPointer
 	{
