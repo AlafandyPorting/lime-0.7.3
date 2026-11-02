@@ -1313,7 +1313,27 @@ class WindowsPlatform extends PlatformTarget
 					Log.warn("Warn: certificate " + pfxPath + " not found, run the following command to create a new one:");
 					var cmd = "-Command \"Start-Process powershell \\\"-ExecutionPolicy Bypass -NoProfile -NoExit -Command `\\\"cd \\`\\\"E:/openfl/BunnyMark/Export/winrt/bin/../scripts\\`\\\"; & \\`\\\".\\newcertificate.ps1\\`\\\"`\\\"\\\" -Verb RunAs\"";
 					Log.info("powershell " + cmd);
+					#if 0
+					var process3 = new sys.io.Process("powershell", [cmd]);
+					if (process3.exitCode() != 0)
+					{
+						var message = process3.stderr.readAll().toString();
+						Log.error("Error newcertificate. " + message);
+					}
+					process3.close();
+
+					// check pfx
+					retry = 10;
+					while (retry > 0 && !sys.FileSystem.exists(appxDir + "scripts/" + pfxFileName))
+					{
+						Log.info("waiting " + appxDir + "scripts/" + pfxFileName);
+						Sys.sleep(6);
+						retry--;
+					}
+					if (retry <= 0) Log.error("Error creating certificate");
+					#else
 					return;
+					#end
 				}
 
 				if (appxDir + "scripts/" + pfxFileName != pfxPath)
