@@ -211,9 +211,19 @@ class WindowsPlatform extends PlatformTarget
 			}
 		}
 
-		if (project.targetFlags.exists("32") || project.flags.exists("32") || project.defines.exists("32") || project.defines.exists("HXCPP_M32"))
+		var is32BitRequested = project.targetFlags.exists("32") || 
+		                       project.flags.exists("32") || 
+		                       project.defines.exists("32") || 
+		                       project.defines.exists("HXCPP_M32") ||
+		                       project.targetFlags.exists("32bits") ||
+		                       project.defines.exists("32bits");
+
+		if (is32BitRequested)
 		{
 			is64 = false;
+			project.defines.remove("HXCPP_M64");
+			project.flags.remove("HXCPP_M64");
+			project.targetFlags.remove("64");
 		}
 		
 		if (project.targetFlags.exists("64") || project.flags.exists("64") || project.defines.exists("64") || project.defines.exists("HXCPP_M64"))
